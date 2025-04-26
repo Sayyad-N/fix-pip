@@ -53,6 +53,42 @@ fix_pip_problems() {
     echo "Pip repair actions complete."
 }
 
+check_common_pip_issues() {
+    echo "Checking for common pip issues..."
+
+    echo "1. Checking if pip is installed..."
+    if ! command -v pip3 >/dev/null 2>&1; then
+        echo "pip3 is not installed. Attempting to install..."
+        python3 -m ensurepip --upgrade
+    else
+        echo "pip3 is installed."
+    fi
+
+    echo "2. Checking if pip is in PATH..."
+    if ! echo "$PATH" | grep -q "$(python3 -m site --user-base)/bin"; then
+        echo "pip's user base binary directory is not in PATH."
+        echo "Consider adding $(python3 -m site --user-base)/bin to your PATH."
+    else
+        echo "pip's user base binary directory is in PATH."
+    fi
+
+    echo "3. Checking for virtual environment..."
+    if [ -n "$VIRTUAL_ENV" ]; then
+        echo "Virtual environment detected at $VIRTUAL_ENV"
+    else
+        echo "No virtual environment detected."
+    fi
+
+    echo "4. Checking for network connectivity to PyPI..."
+    if ping -c 1 pypi.org >/dev/null 2>&1; then
+        echo "Network connectivity to PyPI is OK."
+    else
+        echo "Cannot reach pypi.org. Check your network connection or proxy settings."
+    fi
+
+    echo "Common pip issue checks complete."
+}
+
 # Menu
 clear
 echo "======================================"
@@ -67,7 +103,8 @@ echo ""
 echo "1. Fix pip.conf"
 echo "2. Add python alias to .bashrc"
 echo "3. Fix common pip problems"
-echo "4. Run all"
+echo "4. Check for common pip issues"
+echo "5. Run all fixes"
 echo "0. Exit"
 read -p "Choose an option: " opt
 
@@ -75,10 +112,12 @@ case $opt in
     1) fix_pip_conf ;;
     2) add_python_alias ;;
     3) fix_pip_problems ;;
-    4)
+    4) check_common_pip_issues ;;
+    5)
         fix_pip_conf
         add_python_alias
         fix_pip_problems
+        check_common_pip_issues
         ;;
     0) echo "Bye!" ;;
     *) echo "Invalid option!" ;;
